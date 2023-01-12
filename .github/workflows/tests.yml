@@ -33,9 +33,12 @@ jobs:
 
       - run: brew test-bot --only-tap-syntax
 
-      - run: brew test-bot --only-formulae
-        if: github.event_name == 'pull_request'
+      - run: brew test-bot --only-formulae --testing-formulae contensis-cli
+        if: github.event_name == 'pull_request' && matrix.os == 'macos-12'
 
+      - run: brew test-bot --only-formulae --testing-formulae contensis-cli-linux
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-22.04'
+        
       - name: Upload bottles as artifact
         if: always() && github.event_name == 'pull_request'
         uses: actions/upload-artifact@main
