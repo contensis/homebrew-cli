@@ -7,6 +7,12 @@ class ContensisCli < Formula
   sha256 "06f3d7e85472f1b396adb07052b210c625c8c856ade75c6e6c54814b86ad75b2"
   license "GPL-3.0-or-later"
 
+  bottle do
+    root_url "https://github.com/contensis/homebrew-cli/releases/download/contensis-cli-1.0.0-beta.65"
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, monterey: "907d028b1898674f789e1a1f7fb394ad001da38de780a53b502d0eba42a3cab5"
+  end
+
   def install
     p "Installing binary contensis-cli-mac"
     # install system specific binary downloaded from the specified url
