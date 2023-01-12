@@ -7,10 +7,6 @@ class ContensisCliLinux < Formula
   sha256 "69e2aaf9ad8f3ff5c12cd817f96edd1908642ea48893345a9d0c1b6c527a7be3"
   license "GPL-3.0-or-later"
 
-  bottle do
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "c80ea8a507375a28f8733183725bf4f64ad6eff7b4e31380d9bafe7158245155"
-  end
-
   def install
     p "Installing binary contensis-cli-linux"
     # install system specific binary downloaded from the specified url
