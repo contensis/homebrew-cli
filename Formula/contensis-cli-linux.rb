@@ -7,6 +7,12 @@ class ContensisCliLinux < Formula
   sha256 "69e2aaf9ad8f3ff5c12cd817f96edd1908642ea48893345a9d0c1b6c527a7be3"
   license "GPL-3.0-or-later"
 
+  bottle do
+    root_url "https://github.com/contensis/homebrew-cli/releases/download/contensis-cli-linux-1.0.0-beta.65"
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "d18d2e09579b74edc899c2f8c359d229f7dda70bb94271ae4533f90505f9fdcd"
+  end
+
   def install
     p "Installing binary contensis-cli-linux"
     # install system specific binary downloaded from the specified url
