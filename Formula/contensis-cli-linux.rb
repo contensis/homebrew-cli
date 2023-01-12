@@ -1,17 +1,17 @@
-class ContensisCli < Formula
+class ContensisCliLinux < Formula
   # `brew style contensis/cli` is insanely fussy about the order of these parameters
   desc "Fully featured Contensis command-line interface"
   homepage "https://github.com/contensis/node-cli"
-  url "https://github.com/contensis/node-cli/releases/download/v1.0.0-beta.51/contensis-cli-mac"
+  url "https://github.com/contensis/node-cli/releases/download/v1.0.0-beta.51/contensis-cli-linux"
   version "1.0.0-beta.65"
-  sha256 "06f3d7e85472f1b396adb07052b210c625c8c856ade75c6e6c54814b86ad75b2"
+  sha256 "69e2aaf9ad8f3ff5c12cd817f96edd1908642ea48893345a9d0c1b6c527a7be3"
   license "GPL-3.0-or-later"
 
   def install
-    p "Installing binary contensis-cli-mac"
+    p "Installing binary contensis-cli-linux"
     # install system specific binary downloaded from the specified url
     # renamed to "contensis-cli"
-    bin.install "contensis-cli-mac" => "contensis-cli"
+    bin.install "contensis-cli-linux" => "contensis-cli"
     # create a symlink to "contensis-cli" executable called just "contensis"
     ln_s "./contensis-cli", bin/"contensis"
 
