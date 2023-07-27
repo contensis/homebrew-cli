@@ -1,12 +1,8 @@
-# Contensis Cli Homebrew Tap
+# Contensis CLI Homebrew Tap
 
 Ensure https://brew.sh is installed in your terminal
 
-## How do I install these formulae?
-
-`brew install contensis/cli/<formula>`
-
-Or `brew tap contensis/cli` and then `brew install <formula>`.
+## Install the package with `brew`
 
 ### MacOS
 
@@ -22,7 +18,7 @@ brew tap contensis/cli
 brew install contensis-cli-linux --build-bottle
 ```
 
-## Update the package
+## Update the installed package
 
 [Follow the official documentation](https://docs.brew.sh/FAQ#how-do-i-update-my-local-packages)
 
@@ -31,17 +27,13 @@ brew update
 brew upgrade <formula>
 ```
 
-If all else fails try `brew update && brew reinstall <formula>` 
-
-## Documentation
+## Further reading
 
 `brew help`, `man brew` or check [Homebrew's documentation](https://docs.brew.sh).
 
-## Updating the Tap
+## Maintaining this Tap
 
-A new release of the cli will require both formulae updating
-
-Tested with WSL running Ubuntu 22.04
+A new release of the cli will require both formulae updating in this tap repository (instructions tested with Ubuntu 22.04 running in WSL2)
 
 Ensure git is installed in the terminal and the environment will need to be set up to pull and push to your GitHub repositories
 
@@ -53,7 +45,7 @@ git config --global user.username "your GitHub username"
 
 First retrieve the tap `brew tap contensis/cli`
 
-- `cd` into the tap folder
+- `cd` into the tap folder `cd $(brew --repo contensis/cli)`
 
 ### Use the command `brew bump-formula-pr`
 
@@ -81,3 +73,7 @@ It will make a fork of the `contensis/homebrew-cli` repository in your GitHub pr
 You need to approve the new pull request in this repository to merge the version bump change into this tap.
 
 That's it, try updating the package in the normal way on another machine.
+
+### Documentation
+
+https://docs.brew.sh/Formula-Cookbook#updating-formulae - this applies to making pull requests for submission into `homebrew/core` repository, however as we are working in a third-party tap, the pull requests are made to this repository
