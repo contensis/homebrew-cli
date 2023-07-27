@@ -22,6 +22,17 @@ brew tap contensis/cli
 brew install contensis-cli-linux --build-bottle
 ```
 
+## Update the package
+
+[Follow the official documentation](https://docs.brew.sh/FAQ#how-do-i-update-my-local-packages)
+
+```sh
+brew update
+brew upgrade <formula>
+```
+
+If all else fails try `brew update && brew reinstall <formula>` 
+
 ## Documentation
 
 `brew help`, `man brew` or check [Homebrew's documentation](https://docs.brew.sh).
@@ -68,3 +79,5 @@ Remove `--dry-run` to make the version bump. Follow on screen prompts, you may b
 It will make a fork of the `contensis/homebrew-cli` repository in your GitHub profile e.g. `nflatley-zengent/homebrew-cli`, commit the indicated version bump changes to the `<formula>.rb` file then submit a pull request back to the original `contensis/homebrew-cli` repository.
 
 You need to approve the new pull request in this repository to merge the version bump change into this tap.
+
+That's it, try updating the package in the normal way on another machine.
