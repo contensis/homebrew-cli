@@ -6,7 +6,8 @@ class ContensisCli < Formula
   version "1.0.0-beta.85"
   sha256 "10a332f91251bde6af3c2edee3acd796fd8236b18ea070a9a9916f2e277299d8"
   license "GPL-3.0-or-later"
-
+  
+  # the pull request needs a label of "pr-pull" in order to generate new bottles
   bottle do
     root_url "https://github.com/contensis/homebrew-cli/releases/download/contensis-cli-1.0.0-beta.65"
     rebuild 1
