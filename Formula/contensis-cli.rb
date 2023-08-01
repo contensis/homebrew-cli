@@ -9,9 +9,9 @@ class ContensisCli < Formula
 
   # the pull request needs a label of "pr-pull" in order to generate new bottles x
   bottle do
-    root_url "https://github.com/contensis/homebrew-cli/releases/download/contensis-cli-1.0.0-beta.65"
-    rebuild 1
-    sha256 cellar: :any_skip_relocation, monterey: "907d028b1898674f789e1a1f7fb394ad001da38de780a53b502d0eba42a3cab5"
+    root_url "https://github.com/contensis/homebrew-cli/releases/download/contensis-cli-1.0.0-beta.85"
+    rebuild 2
+    sha256 cellar: :any_skip_relocation, monterey: "2d13921113472e2c870564939e661518acc811b46c74ac0c4fdae4a2f5c8d88d"
   end
 
   def install
