@@ -70,10 +70,16 @@ Remove `--dry-run` to make the version bump. Follow on screen prompts, you may b
 
 It will make a fork of the `contensis/homebrew-cli` repository in your GitHub profile e.g. `nflatley-zengent/homebrew-cli`, commit the indicated version bump changes to the `<formula>.rb` file then submit a pull request back to the original `contensis/homebrew-cli` repository.
 
-You need to approve the new pull request in this repository to merge the version bump change into this tap.
+Wait for the `brew test-bot` workflow jobs to complete successfully.
+
+You need to add the label `pr-pull` to the pull request - this will trigger a new workflow
+
+Wait for the `brew pr-pull` workflow job to complete and then the pull request will be automatically approved and the changes (and new bottles) added into this tap.
 
 That's it, try updating the package in the normal way on another machine.
 
 ### Documentation
 
 https://docs.brew.sh/Formula-Cookbook#updating-formulae - this applies to making pull requests for submission into `homebrew/core` repository, however as we are working in a third-party tap, the pull requests are made to this repository
+
+https://gitlab.com/morpheus.lab/homebrew - contains well documented Maintainer Guidelines for their third-party tap
