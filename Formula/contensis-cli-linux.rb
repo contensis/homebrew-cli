@@ -3,7 +3,6 @@ class ContensisCliLinux < Formula
   desc "Fully featured Contensis command-line interface"
   homepage "https://github.com/contensis/node-cli"
   url "https://github.com/contensis/node-cli/releases/download/v1.0.8/contensis-cli-linux"
-  version "1.0.8"
   sha256 "dc12c60990dc7ea4852f60969943cabaf2118019acf13a9bdad55fccf4e80274"
   license "GPL-3.0-or-later"
 
