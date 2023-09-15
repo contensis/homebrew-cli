@@ -57,13 +57,13 @@ First retrieve the tap `brew tap contensis/cli`
 ### Mac version bump
 
 ```sh
-brew bump-formula-pr --dry-run --url https://github.com/contensis/node-cli/releases/download/_ADDVERSION_/contensis-cli-mac --version _ADD_VERSION_ contensis-cli
+brew bump-formula-pr --dry-run --url https://github.com/contensis/node-cli/releases/download/v{$VERSION}/contensis-cli-mac contensis-cli
 ```
 
 ### Linux version bump
 
 ```sh
-brew bump-formula-pr --dry-run --url https://github.com/contensis/node-cli/releases/download/_ADDVERSION_/contensis-cli-linux --version _ADD_VERSION_ contensis-cli-linux
+brew bump-formula-pr --dry-run --url https://github.com/contensis/node-cli/releases/download/v{$VERSION}/contensis-cli-linux contensis-cli-linux
 ```
 
 Remove `--dry-run` to make the version bump. Follow on screen prompts, you may be required to install build tools which brew should indicate in the output.
