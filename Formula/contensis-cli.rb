@@ -3,7 +3,6 @@ class ContensisCli < Formula
   desc "Fully featured Contensis command-line interface"
   homepage "https://github.com/contensis/node-cli"
   url "https://github.com/contensis/node-cli/releases/download/v1.0.8/contensis-cli-mac"
-  version "1.0.8"
   sha256 "b078c32dd1c8919fd0177ff9c64a505966ecfc66a157f8ae81e173ad195a63a4"
   license "GPL-3.0-or-later"
 
