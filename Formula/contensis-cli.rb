@@ -8,7 +8,6 @@ class ContensisCli < Formula
 
   # the pull request needs a label of "pr-pull" in order to generate new bottles x
 
-
   def install
     p "Installing binary contensis-cli-mac"
     # install system specific binary downloaded from the specified url
