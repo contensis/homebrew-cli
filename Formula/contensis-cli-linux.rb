@@ -8,8 +8,8 @@ class ContensisCliLinux < Formula
 
   bottle do
     root_url "https://github.com/contensis/homebrew-cli/releases/download/contensis-cli-linux-1.0.8"
-    rebuild 2
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "1da56462e061fc6fd1e3c1a21fe11aea4979f6b5cfac2273f47b2b9a1e089a03"
+    rebuild 3
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "9c0c8401531be0e96d16682a08c56b3f48258ceb354658fc51b23bc18be6ccc6"
   end
 
   def install
