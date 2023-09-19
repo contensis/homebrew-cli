@@ -7,9 +7,8 @@ class ContensisCliLinux < Formula
   license "GPL-3.0-or-later"
 
   bottle do
-    root_url "https://github.com/contensis/homebrew-cli/releases/download/contensis-cli-linux-1.0.8"
-    rebuild 3
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "9c0c8401531be0e96d16682a08c56b3f48258ceb354658fc51b23bc18be6ccc6"
+    root_url "https://github.com/contensis/homebrew-cli/releases/download/contensis-cli-linux-1.0.11"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "7784260d709048ba0a1612bad191031933cdfe699531149bf99e0a359912d90d"
   end
 
   def install
