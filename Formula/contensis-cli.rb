@@ -1,8 +1,8 @@
 class ContensisCli < Formula
   # `brew style contensis/cli` is insanely fussy about the order of these parameters
   desc "Fully featured Contensis command-line interface"
-  homepage "https://github.com/contensis/node-cli"
-  url "https://github.com/contensis/node-cli/releases/download/v1.0.11/contensis-cli-mac"
+  homepage "https://github.com/contensis/cli"
+  url "https://github.com/contensis/cli/releases/download/v1.0.11/contensis-cli-mac"
   sha256 "d6f122c146d9738af516366c4c9893970c5b3f847b6857e2d79a4a1caa1a6b9c"
   license "GPL-3.0-or-later"
 
