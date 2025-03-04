@@ -2,8 +2,8 @@ class ContensisCli < Formula
   # `brew style contensis/cli` is insanely fussy about the order of these parameters
   desc "Fully featured Contensis command-line interface"
   homepage "https://github.com/contensis/cli"
-  url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.4.0/contensis-cli-mac"
-  sha256 "11a8ebdf6c0c322cf9f5d1d5491fbd61a9b826403fbab76c25c5a5134500ac0d"
+  url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.4.1/contensis-cli-mac"
+  sha256 "00c72d190d3848e851717aa726939a2baf35e46a6bd783bdfef0ed4d3d9fe28d"
   license "GPL-3.0-or-later"
 
   # the pull request needs a label of "pr-pull" in order to generate new bottles
