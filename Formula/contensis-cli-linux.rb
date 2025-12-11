@@ -2,8 +2,8 @@ class ContensisCliLinux < Formula
   # `brew style contensis/cli` is insanely fussy about the order of these parameters
   desc "Fully featured Contensis command-line interface"
   homepage "https://github.com/contensis/cli"
-  url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.5.0/contensis-cli-linux"
-  sha256 "97f6667253e816bc1904d7771a20efe34023c709f9cc45caf91f75ca1735b0df"
+  url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.6.0/contensis-cli-linux"
+  sha256 "280d4521f2a56fc446bcb76833104f74826c806cc3e92a5a9f330c60a44b66e9"
   license "GPL-3.0-or-later"
 
   def install
