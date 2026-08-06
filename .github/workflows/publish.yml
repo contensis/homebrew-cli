@@ -7,6 +7,16 @@ jobs:
   pr-pull:
     if: contains(github.event.pull_request.labels.*.name, 'pr-pull')
     runs-on: ubuntu-24.04
+    # Explicit, because the default GITHUB_TOKEN permissions are read-only on
+    # repositories created or reconfigured since 2023. Without these the job fails
+    # late, at the push or the bottle upload, rather than up front.
+    #   contents: write      — cherry-pick the PR commits and push them to main
+    #   packages: write      — upload bottles to ghcr.io (see tests.yml --root-url)
+    #   pull-requests: write — close the PR and comment on it
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
     steps:
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@master

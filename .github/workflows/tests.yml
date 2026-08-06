@@ -7,8 +7,13 @@ on:
 jobs:
   test-bot:
     strategy:
+      # One platform failing shouldn't cancel the others — we want the full
+      # picture of which platforms build.
+      fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-15-intel]
+        # macos-15 is arm64; macos-15-intel is x86_64. ubuntu-24.04-arm is still
+        # a GitHub public-preview runner.
+        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-15, macos-15-intel]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Homebrew
@@ -20,8 +25,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.set-up-homebrew.outputs.gems-path }}
-          key: ${{ runner.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
-          restore-keys: ${{ runner.os }}-rubygems-
+          # runner.arch is required, not cosmetic: runner.os is 'Linux' for both
+          # ubuntu-24.04 and ubuntu-24.04-arm (and 'macOS' for both Mac legs), so
+          # without it the two architectures overwrite each other's cache.
+          key: ${{ runner.os }}-${{ runner.arch }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+          restore-keys: ${{ runner.os }}-${{ runner.arch }}-rubygems-
 
       - name: Install Homebrew Bundler RubyGems
         if: steps.cache.outputs.cache-hit != 'true'
@@ -33,15 +41,32 @@ jobs:
 
       - run: brew test-bot --only-tap-syntax
 
-      - run: brew test-bot --only-formulae --testing-formulae contensis-cli
-        if: github.event_name == 'pull_request' && matrix.os == 'macos-15-intel'
+      # TEMPORARY Phase 0 gate: bottle ONLY the spike. Once the npm build is
+      # promoted to the sole `contensis-cli` formula (Phase 2) and the binary
+      # formula is removed, drop `--testing-formulae contensis-cli-spike` again and
+      # let plain detection (`--only-formulae`) decide what to build. This gate
+      # keeps the `pkg`-built binary formula out of the bottle path — bottling it
+      # corrupts the binary on Linux (patchelf) — while still exercising the full
+      # bottle/publish flow now.
+      #
+      # --root-url is NOT optional for this tap. Left to itself, test-bot points a
+      # third-party tap's bottles at
+      #   <remote>/releases/download/<formula>-<version>
+      # which is version-pinned, and routes publishing to GitHub Releases. That is
+      # the exact `root_url` shape that went stale here in 2023/24 and had to be
+      # ripped out (4eea075, 10d4b96). Pointing at ghcr.io instead gives a
+      # version-independent root_url and routes `brew pr-pull` through GitHub
+      # Packages, which is what publish.yml is already configured for.
+      # Shape is fixed by Homebrew: https://ghcr.io/v2/<owner>/<tap-without-homebrew->
+      - run: brew test-bot --only-formulae --testing-formulae contensis-cli-spike --root-url=https://ghcr.io/v2/contensis/cli
+        if: github.event_name == 'pull_request'
 
-      - run: brew test-bot --only-formulae --testing-formulae contensis-cli-linux
-        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-24.04'
-        
       - name: Upload bottles as artifact
         if: always() && github.event_name == 'pull_request'
         uses: actions/upload-artifact@main
         with:
-          name: bottles
+          # Must be unique per matrix leg — upload-artifact v4+ rejects a
+          # repeated name within a run. `brew pr-pull` downloads every artifact
+          # from the run, so the suffix doesn't affect publishing.
+          name: bottles_${{ matrix.os }}
           path: '*.bottle.*'
