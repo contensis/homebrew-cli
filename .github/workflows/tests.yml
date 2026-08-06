@@ -13,16 +13,35 @@ jobs:
       matrix:
         # macos-15 is arm64; macos-15-intel is x86_64. ubuntu-24.04-arm is still
         # a GitHub public-preview runner.
+        #
+        # macos-15-intel cannot produce a bottle and warns "has unbottled
+        # dependencies" every run. That is not our bug: homebrew-core has all
+        # but abandoned Intel Sequoia (81 formulae carry a `sequoia` bottle vs
+        # 7219 carrying `sonoma`), and `node` is not one of them. test-bot
+        # requires build/runtime deps to be bottled for the *exact* current tag
+        # — `no_older_versions: !dep.test?` in test_bot/formulae.rb — so node's
+        # `sonoma` bottle does not satisfy it even though users on Intel Sequoia
+        # do get poured that bottle at install time.
+        # Kept deliberately for now. To actually bottle Intel macOS we would need
+        # an Intel *Sonoma* runner (macos-14-large), which is a billed larger
+        # runner. Note this leg returns before install/test, so it contributes no
+        # test coverage while it cannot bottle.
         os: [ubuntu-24.04, ubuntu-24.04-arm, macos-15, macos-15-intel]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        # Pinned, not @master: Homebrew deprecated the floating ref, the `master`
+        # branch sync stops, and it becomes a hard error at Homebrew 5.2.0. The
+        # SHA below is release 2026.07.10.1 — bump it when Homebrew's deprecation
+        # notice names a newer one.
+        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
 
       - name: Cache Homebrew Bundler RubyGems
         id: cache
-        uses: actions/cache@v4
+        # v4 runs on node20, which GitHub has deprecated and now force-runs on
+        # node24; v5+ target node24 natively. Inputs are unchanged.
+        uses: actions/cache@v6
         with:
           path: ${{ steps.set-up-homebrew.outputs.gems-path }}
           # runner.arch is required, not cosmetic: runner.os is 'Linux' for both
@@ -34,6 +53,13 @@ jobs:
       - name: Install Homebrew Bundler RubyGems
         if: steps.cache.outputs.cache-hit != 'true'
         run: brew install-bundler-gems
+
+      # GitHub's Intel macOS image ships with `aws/tap` already tapped, which makes
+      # every subsequent brew command warn "Skipping aws/tap because it is not
+      # trusted". Untap rather than `brew trust` it — we do not use it, so there is
+      # no reason to mark a third-party tap trusted. No-op (hence `|| true`) on the
+      # runners that do not have it.
+      - run: brew untap aws/tap || true
 
       - run: brew test-bot --only-cleanup-before
 
@@ -63,10 +89,15 @@ jobs:
 
       - name: Upload bottles as artifact
         if: always() && github.event_name == 'pull_request'
-        uses: actions/upload-artifact@main
+        # Pinned to a release major rather than @main: `main` is an unpinned
+        # development branch, not a supported ref. v7 targets node24.
+        uses: actions/upload-artifact@v7
         with:
           # Must be unique per matrix leg — upload-artifact v4+ rejects a
           # repeated name within a run. `brew pr-pull` downloads every artifact
           # from the run, so the suffix doesn't affect publishing.
           name: bottles_${{ matrix.os }}
           path: '*.bottle.*'
+          # macos-15-intel produces no bottle (see the matrix comment above), so the
+          # default `warn` behaviour reports a missing-files warning on every run.
+          if-no-files-found: ignore
