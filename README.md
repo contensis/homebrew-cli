@@ -4,18 +4,13 @@ Ensure https://brew.sh is installed in your terminal
 
 ## Install the package with `brew`
 
-### MacOS
+The single `contensis-cli` formula installs the correct prebuilt binary for your
+platform (macOS x86_64/arm64, Linux x86_64/arm64).
 
 ```sh
 brew tap contensis/cli
+brew trust contensis/cli # newer brew requires this to install from a tap
 brew install contensis-cli
-```
-
-### Linux
-
-```sh
-brew tap contensis/cli
-brew install contensis-cli-linux --build-bottle
 ```
 
 ## Update the installed package
@@ -33,7 +28,7 @@ brew upgrade <formula>
 
 ## Maintaining this Tap
 
-A new release of the cli will require both formulae updating in this tap repository (instructions tested with Ubuntu 22.04 running in WSL2)
+A new release of the cli requires the `Formula/contensis-cli.rb` formula updating in this tap repository (instructions tested with Ubuntu 22.04 running in WSL2)
 
 Ensure git is installed in the terminal and the environment will need to be set up to pull and push to your GitHub repositories
 
@@ -52,19 +47,16 @@ First retrieve the tap `brew tap contensis/cli`
 - add `--dry-run` option to test the version bump
 - add `--url` option to supply download path to the platform-specific release asset/executable
 - add `--version` option with the release version number
-- add `<formula>` as the final argument e.g. `contensis-cli` or `contensis-cli-linux`
+- add `contensis-cli` as the final argument
 
-### Mac version bump
-
-```sh
-brew bump-formula-pr --dry-run --url https://github.com/contensis/cli/releases/download/v{$VERSION}/contensis-cli-mac contensis-cli
-```
-
-### Linux version bump
+### Version bump
 
 ```sh
-brew bump-formula-pr --dry-run --url https://github.com/contensis/cli/releases/download/v{$VERSION}/contensis-cli-linux contensis-cli-linux
+brew bump-formula-pr --dry-run --url https://github.com/contensis/cli/releases/download/contensis-cli-v{$VERSION}/contensis-cli-linux contensis-cli
 ```
+
+The formula downloads a different asset per platform (macOS x86_64/arm64, Linux x86_64/arm64),
+so each release needs all four `url`/`sha256` pairs kept in sync — see `HOMEBREW_UNIFIED_FORMULA.md`.
 
 Remove `--dry-run` to make the version bump. Follow on screen prompts, you may be required to install build tools which brew should indicate in the output.
 
