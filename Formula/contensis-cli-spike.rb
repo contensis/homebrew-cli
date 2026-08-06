@@ -36,18 +36,36 @@ class ContensisCliSpike < Formula
 
   depends_on "node"
 
+  on_linux do
+    # keytar's binding.gyp shells out to `pkg-config --cflags libsecret-1` and
+    # links against libsecret. macOS builds link AppKit instead and need neither.
+    depends_on "pkgconf" => :build
+    depends_on "libsecret"
+  end
+
   def install
-    # Lifecycle scripts stay disabled (the `std_npm_args` default). Enabling
-    # them makes keytar@7.9.0 run `prebuild-install || npm run build`, and
-    # because `std_npm_args` hardcodes `--build-from-source`, prebuild-install
-    # refuses to fetch its prebuilt binary and falls through to `node-gyp
-    # rebuild` — which needs pkg-config + libsecret-1 on Linux and fails.
-    # The CLI requires keytar lazily inside a try/catch (see
-    # dist/providers/CredentialProvider.js), so without the native module it
-    # still runs; only OS-keychain credential storage degrades to the
-    # password fallback. To restore it, pass `ignore_scripts: false` here and
-    # add `depends_on "libsecret"` plus `depends_on "pkgconf" => :build`.
+    # Lifecycle scripts stay disabled (the `std_npm_args` default) so install
+    # hooks for the ~295 packages in the dependency tree never execute.
     system "npm", "install", *std_npm_args(prefix: libexec)
+
+    # keytar@7.9.0 is the one prod dependency needing a native build. With
+    # scripts disabled its `prebuild-install || npm run build` install hook
+    # never runs, leaving no build/Release/keytar.node — and that is not
+    # benign. CredentialProvider catches the failed `require` but installs a
+    # stub whose every method rethrows the original MODULE_NOT_FOUND (see
+    # dist/providers/CredentialProvider.js), so any credential read that has
+    # no inline password fails with
+    #   Cannot find module '../build/Release/keytar.node'
+    # Build this one module rather than enabling scripts tree-wide, which
+    # would run untrusted install hooks for the whole tree.
+    #
+    # `npm run build` is `node-gyp rebuild`; npm supplies node-gyp on PATH for
+    # run-scripts, and npm_config_nodedir points it at Homebrew's node headers
+    # so it does not fetch its own copy mid-build.
+    ENV["npm_config_nodedir"] = formula_opt_prefix("node")
+    cd libexec/"lib/node_modules/contensis-cli/node_modules/keytar" do
+      system "npm", "run", "build"
+    end
 
     # Symlink the generated executables to Homebrew's root path
     bin.install_symlink libexec.glob("bin/*")
@@ -71,6 +89,10 @@ class ContensisCliSpike < Formula
     assert_predicate bin/"contensis", :executable?
     assert_path_exists bin/"contensis-cli"
     assert_predicate bin/"contensis-cli", :executable?
+
+    # Guards the keytar build above: without this artefact the CLI raises
+    # MODULE_NOT_FOUND on every credential read that has no inline password.
+    assert_path_exists libexec/"lib/node_modules/contensis-cli/node_modules/keytar/build/Release/keytar.node"
 
     # TODO: re-enable once the CLI reports its own version correctly.
     # The published npm package 1.6.0 carries `"version": "1.6.0"` in its
