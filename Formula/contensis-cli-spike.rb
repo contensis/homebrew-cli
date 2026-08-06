@@ -1,6 +1,12 @@
 # SPIKE: Contensis CLI source build (offline experiment).
 # Unique class name so it cannot conflict with the real `contensis-cli`
 # formula that lives alongside it in this tap.
+#
+# NOTE: keep comments OUTSIDE the `livecheck do` block below. Homebrew's
+# `brew bottle --merge` (FormulaAST#add_stanza) anchors the bottle insertion on
+# the livecheck block's inline comments, which nests the generated `bottle do`
+# block inside `livecheck` and fails with `undefined method 'bottle' for an
+# instance of Livecheck`.
 class ContensisCliSpike < Formula
   desc "SPIKE: Contensis CLI source build (offline experiment)"
   homepage "https://github.com/contensis/cli"
@@ -12,11 +18,11 @@ class ContensisCliSpike < Formula
   # `npm init` default, upstream bug) — keep it in sync with GPL-3.0 here.
   license "GPL-3.0"
 
+  # The `latest` dist-tag (not `prerelease`) is what users get by default, so
+  # tracking it keeps livecheck reporting the stable CLI and ignoring the
+  # 1.x.y-beta pre-releases published under the `prerelease` dist-tag. Explicit
+  # rather than guessed so the intent survives any future URL-guessing change.
   livecheck do
-    # The `latest` dist-tag (not `prerelease`) is what users get by default, so
-    # tracking it keeps livecheck reporting the stable CLI and ignoring the
-    # 1.x.y-beta pre-releases published under the `prerelease` dist-tag. Explicit
-    # rather than guessed so the intent survives any future URL-guessing change.
     url "https://registry.npmjs.org/contensis-cli/latest"
     regex(/["']version["']:\s*["'](\d+(?:\.\d+)+)["']/i)
   end
