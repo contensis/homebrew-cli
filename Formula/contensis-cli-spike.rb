@@ -40,6 +40,11 @@ class ContensisCliSpike < Formula
     # keytar's binding.gyp shells out to `pkg-config --cflags libsecret-1` and
     # links against libsecret. macOS builds link AppKit instead and need neither.
     depends_on "pkgconf" => :build
+    # keytar.node links libglib/libgio/libgobject/libgmodule transitively via
+    # libsecret. `brew linkage --test` fails on an indirect dependency with
+    # linkage, so glib has to be declared even though libsecret already pulls
+    # it in — this costs no extra download, it just makes the edge explicit.
+    depends_on "glib"
     depends_on "libsecret"
   end
 
