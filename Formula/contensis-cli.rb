@@ -2,8 +2,10 @@ class ContensisCli < Formula
   # `brew style contensis/cli` is insanely fussy about the order of these parameters
   desc "Fully featured Contensis command-line interface"
   homepage "https://github.com/contensis/cli"
+  # No explicit `version`: Homebrew scans `1.6.0` from the `contensis-cli-v1.6.0`
+  # release tag in the URL below (and each `on_linux` override). Adding it is
+  # rejected by `brew audit` as redundant with the scanned version, which fails CI.
   url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.6.0/contensis-cli-mac"
-  version "1.6.0"
   sha256 "8afcd5fbc21019988f18c98d329e3df5deaec6fc5f0b088c81ea8c6c51bf7a86"
   license "GPL-3.0"
 
