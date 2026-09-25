@@ -71,18 +71,25 @@ class ContensisCli < Formula
     assert_predicate bin/"contensis-cli", :executable?
     assert_predicate bin/"contensis", :symlink?
 
-    # TODO: re-enable once the CLI release exits 0 on --version/--help.
-    # The currently released binary (v1.6.0) exits 1 on both, so these
-    # `shell_output` assertions fail. They are temporarily commented out and
-    # should be restored when the CLI's exit-code fix ships.
-    # # 2. Version — `shell_output` fails the test if the command exits non-zero;
-    # #    assert the output equals the formula's declared version.
-    # assert_match version.to_s, shell_output("#{bin}/contensis-cli --version").strip
+    # Restored for 1.7.0: the exit-code fix (contensis/cli 5b13e2d) is in this
+    # release, and the pkg-built binaries bake the correct version string —
+    # verified against the contensis-cli-linux asset: `--version` prints 1.7.0 and
+    # both flags exit 0. This is *not* true of the npm tarball, which still ships a
+    # stale src/version.ts (LIB_VERSION = 1.6.1-beta.25) until contensis/cli
+    # 31398bf is released, so the equivalent assertion stays commented out in the
+    # npm formula.
+    #
+    # Not exercised by tap CI — tests.yml bottles only the npm formula, so this
+    # file gets `brew style`/`audit` only. Run `brew test contensis-cli` locally.
+    #
+    # 2. Version — `shell_output` fails the test if the command exits non-zero;
+    #    assert the output equals the formula's declared version.
+    assert_match version.to_s, shell_output("#{bin}/contensis-cli --version").strip
 
-    # # 3. The `contensis` alias behaves identically.
-    # assert_match version.to_s, shell_output("#{bin}/contensis --version").strip
+    # 3. The `contensis` alias behaves identically.
+    assert_match version.to_s, shell_output("#{bin}/contensis --version").strip
 
-    # # 4. Help — exits 0 and names the tool; exercises argument parsing.
-    # assert_match "contensis", shell_output("#{bin}/contensis --help")
+    # 4. Help — exits 0 and names the tool; exercises argument parsing.
+    assert_match "contensis", shell_output("#{bin}/contensis --help")
   end
 end
