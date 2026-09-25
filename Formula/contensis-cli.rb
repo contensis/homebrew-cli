@@ -5,8 +5,8 @@ class ContensisCli < Formula
   # No explicit `version`: Homebrew scans `1.6.0` from the `contensis-cli-v1.6.0`
   # release tag in the URL below (and each `on_linux` override). Adding it is
   # rejected by `brew audit` as redundant with the scanned version, which fails CI.
-  url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.6.0/contensis-cli-mac"
-  sha256 "8afcd5fbc21019988f18c98d329e3df5deaec6fc5f0b088c81ea8c6c51bf7a86"
+  url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.0/contensis-cli-mac"
+  sha256 "441f464f223140f5320798e7bc2059dd99171d8e6f571ffc238bd85a43b577a8"
   license "GPL-3.0"
 
   livecheck do
