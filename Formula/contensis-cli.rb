@@ -2,16 +2,17 @@ class ContensisCli < Formula
   # `brew style contensis/cli` is insanely fussy about the order of these parameters
   desc "Fully featured Contensis command-line interface"
   homepage "https://github.com/contensis/cli"
-  # No explicit `version`: Homebrew scans it from the `contensis-cli-v<VERSION>`
-  # release tag in the URL below (and each platform override). Adding it is
-  # rejected by `brew audit` as redundant with the scanned version, which fails CI.
-  #
-  # BECAUSE OF THAT, every `url` here must point at the SAME release tag. Homebrew
-  # derives the version from whichever URL is active on the host platform, so a
-  # platform block left on an older tag silently keeps serving the old release on
-  # that platform (and `brew livecheck` then reports it outdated forever) while CI
-  # stays green: tests.yml bottles only the npm formula, so this file is never
+  # Homebrew derives the version from whichever `url` is active on the host
+  # platform, so every URL here must point at the SAME release tag. A platform
+  # block left on an older tag silently keeps serving the old release on that
+  # platform (and `brew livecheck` reports it outdated forever) while CI stays
+  # green: tests.yml bottles only the npm formula, so this file is never
   # installed or `brew test`ed there. Check all four url/sha256 pairs on a bump.
+  #
+  # Do not add a top-level `version` stanza: `brew audit` rejects it as
+  # "redundant with version scanned from URL", and that is the exact command tap
+  # CI runs (`brew audit --except=installed --tap=contensis/cli`). The two
+  # `-arm64` branches below are the deliberate exception — see the note there.
   url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.0/contensis-cli-mac"
   sha256 "441f464f223140f5320798e7bc2059dd99171d8e6f571ffc238bd85a43b577a8"
   license "GPL-3.0"
@@ -25,13 +26,28 @@ class ContensisCli < Formula
     strategy :github_latest
   end
 
-  # macOS arm64 assets ship from contensis-cli-v1.7.0 onwards (arm64 support added
-  # in contensis/cli 4a08aef). Earlier releases published no mac-arm64 asset, so
-  # Apple Silicon installs fell back to the x86_64 binary above and ran under
-  # Rosetta. `stable.url` is re-resolved per platform, so `install` needs no change.
+  # Both `-arm64` branches below carry an explicit `version` (order matters to
+  # `brew style`: url, version, sha256). Homebrew's URL version parser takes the
+  # trailing digits of the asset stem, so `.../contensis-cli-mac-arm64` scans as
+  # version 64 — and 64 sorts above every future release, so arm64 installs are
+  # never offered an upgrade. The tag is unreadable too: the parser's
+  # GitHub-release pattern wants `releases/download/v<digits.dots>/`, and the
+  # `contensis-cli-` prefix breaks it, so nothing else in the URL is usable.
+  # Declaring `version` inside the branch fixes the scan, and `brew audit` only
+  # calls it redundant when it equals the version scanned from that same URL
+  # (ResourceAuditor#audit_version), so no CI leg trips. Renaming the assets
+  # upstream (e.g. a `-v1.7.0` suffix) or dropping the tag prefix would let all
+  # of this go away.
+  #
+  # macOS arm64 assets ship from contensis-cli-v1.7.0 onwards (arm64 support
+  # added in contensis/cli 4a08aef). Earlier releases published no mac-arm64
+  # asset, so Apple Silicon installs fell back to the x86_64 binary above and ran
+  # under Rosetta. `stable.url` is re-resolved per platform, so `install` needs
+  # no change.
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.0/contensis-cli-mac-arm64"
+      version "1.7.0"
       sha256 "be79afe8f9095f27fa412f168578720e12689258ace591499274a4fd07f3f618"
     end
   end
@@ -39,6 +55,7 @@ class ContensisCli < Formula
   on_linux do
     if Hardware::CPU.arm?
       url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.0/contensis-cli-linux-arm64"
+      version "1.7.0"
       sha256 "b9d35da07890d86928955e01947dc3b721a46767d0ffefab6e3bfcdd17c2e8ff"
     else
       url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.0/contensis-cli-linux"
