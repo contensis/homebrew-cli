@@ -94,8 +94,33 @@ jobs:
       # version-independent root_url and routes `brew pr-pull` through GitHub
       # Packages, which is what publish.yml is already configured for.
       # Shape is fixed by Homebrew: https://ghcr.io/v2/<owner>/<tap-without-homebrew->
-      - run: brew test-bot --only-formulae --testing-formulae contensis-cli-spike --root-url=https://ghcr.io/v2/contensis/cli
+      - name: Build bottles
         if: github.event_name == 'pull_request'
+        # pipefail is not optional here: GitHub's default `bash -e` has no
+        # pipefail, so `brew test-bot … | tee` would report tee's status and the
+        # step could never fail.
+        shell: bash
+        run: |
+          set -euo pipefail
+          brew test-bot --only-formulae --testing-formulae contensis-cli-spike \
+            --root-url=https://ghcr.io/v2/contensis/cli 2>&1 | tee test-bot.log
+
+      # test-bot exits 0 when it ignores a failed step, and on a version bump it
+      # always will: `ignore_failures = … && !bottled_on_current_version` in
+      # test_bot/formulae.rb, and the version being bumped has no bottle yet by
+      # definition. The PR #35 run for 1.7.1 printed
+      #   ==> Skipped or failed formulae: contensis-cli-spike
+      #   Warning: 1 failed step ignored!
+      # and went green. Match the warning rather than the exit code, so the
+      # annotation names the cause instead of just "no bottles uploaded".
+      - name: Fail on a test-bot failure it exited zero on
+        if: always() && github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          if [ -f test-bot.log ] && grep -q "failed step ignored" test-bot.log; then
+            echo "::error::brew test-bot exited 0 after ignoring a failed step"
+            exit 1
+          fi
 
       # The formula users actually install, and the one nothing above touches:
       # the gate bottles only the spike, so contensis-cli.rb otherwise gets
