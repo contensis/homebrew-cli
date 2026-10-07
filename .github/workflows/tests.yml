@@ -139,9 +139,20 @@ jobs:
       # out as the tap and trusts it (setup-homebrew main.sh:
       # `brew trust "$HOMEBREW_TAP_NAME"`). HOMEBREW_NO_INSTALL_FROM_API makes
       # brew read the tap rather than the API, which is what test-bot does too.
+      #
+      # HOMEBREW_NO_PATH_SHADOW_CHECK is not cosmetic. The bottle step above
+      # installs the spike to build it, and the spike provides the same two names,
+      # so the shadow check sees `/opt/homebrew/bin/contensis-cli ->
+      # Cellar/contensis-cli-spike/…` and fails the install outright — even though
+      # the formula itself poured fine. That is expected coexistence between these
+      # two formulae, not a broken install, and it only bites the legs that bottle:
+      # macos-15-intel skips the spike, so it never shadows and passed. The test
+      # block is unaffected either way — `bin` in a test is the formula's own
+      # Cellar bin, not the shadowed shim.
       - name: Install and test contensis-cli
         env:
           HOMEBREW_NO_INSTALL_FROM_API: 1
+          HOMEBREW_NO_PATH_SHADOW_CHECK: 1
         run: |
           brew install --formula contensis-cli
           brew test contensis-cli
