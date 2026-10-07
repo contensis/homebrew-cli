@@ -28,7 +28,10 @@ brew upgrade <formula>
 
 ## Maintaining this Tap
 
-A new release of the cli requires the `Formula/contensis-cli.rb` formula updating in this tap repository (instructions tested with Ubuntu 22.04 running in WSL2)
+A new release of the cli requires the formulae in this tap repository updating in step
+with it: `Formula/contensis-cli.rb` (the prebuilt binaries) and, while it exists,
+`Formula/contensis-cli-spike.rb` (the npm source build). Instructions tested with Ubuntu
+22.04 running in WSL2.
 
 Ensure git is installed in the terminal and the environment will need to be set up to pull and push to your GitHub repositories
 
@@ -42,25 +45,48 @@ First retrieve the tap `brew tap contensis/cli`
 
 - `cd` into the tap folder `cd $(brew --repo contensis/cli)`
 
-### Use the command `brew bump-formula-pr`
+### Bump the binary formula (`contensis-cli`)
 
-- add `--dry-run` option to test the version bump
-- add `--url` option to supply download path to the platform-specific release asset/executable
-- add `--version` option with the release version number
-- add `contensis-cli` as the final argument
+`Formula/contensis-cli.rb` downloads a different asset per platform (macOS
+x86_64/arm64, Linux x86_64/arm64), so every release needs all four `url`/`sha256`
+pairs — plus the two `version` lines inside the arm64 branches — moved together. The
+comments at the top of that file explain why each of those details is there.
 
-### Version bump
+Use the script in this repository. It reads the sha256 that GitHub publishes for each
+release asset, so nothing is downloaded and no checksum is copied by hand:
 
 ```sh
-brew bump-formula-pr --dry-run --url https://github.com/contensis/cli/releases/download/contensis-cli-v{$VERSION}/contensis-cli-linux contensis-cli
+cd "$(brew --repo contensis/cli)"
+utils/bump-binary-formula.sh 1.7.1 --dry-run   # show the diff, write nothing
+utils/bump-binary-formula.sh 1.7.1 --verify    # rewrite, then run the tap CI checks
+git diff -- Formula/contensis-cli.rb
 ```
 
-The formula downloads a different asset per platform (macOS x86_64/arm64, Linux x86_64/arm64),
-so each release needs all four `url`/`sha256` pairs kept in sync — see `HOMEBREW_UNIFIED_FORMULA.md`.
+Do not use `brew bump-formula-pr` on this formula. It rewrites only the top-level
+stable stanza (`FormulaAST#replace_stable_stanza_value` walks `stable_children`), so a
+`url` inside `on_linux`/`on_macos` is invisible to it and the result is a half-bump:
+one platform on the new release, three on the old one, with CI green because
+`tests.yml` bottles only the npm formula. The `mislav/bump-homebrew-formula-action`
+step in the CLI repository has the same limitation — it replaces only the first `url`,
+`sha256` and `version` line in the file — and it now skips this formula outright,
+because its version comparison cannot parse a `contensis-cli-v…` tag and concludes that
+every release is older than the formula.
 
-Remove `--dry-run` to make the version bump. Follow on screen prompts, you may be required to install build tools which brew should indicate in the output.
+### Bump the npm formula (`contensis-cli-spike`)
 
-It will make a fork of the `contensis/homebrew-cli` repository in your GitHub profile e.g. `nflatley-zengent/homebrew-cli`, commit the indicated version bump changes to the `<formula>.rb` file then submit a pull request back to the original `contensis/homebrew-cli` repository.
+This one has a single `url`, so `brew bump-formula-pr` is the right tool:
+
+```sh
+brew bump-formula-pr --url https://registry.npmjs.org/contensis-cli/-/contensis-cli-1.7.1.tgz contensis-cli-spike
+```
+
+Delete the `bottle do` block in the same commit: the published blobs belong to the
+previous tarball and the `pr-pull` run regenerates the block. Never hand-write it.
+
+### Open the pull request
+
+Open a pull request against `contensis/homebrew-cli` — from a fork if you do not have
+write access; `brew bump-formula-pr` makes the fork and the PR for you.
 
 Wait for the `brew test-bot` workflow jobs to complete successfully.
 
