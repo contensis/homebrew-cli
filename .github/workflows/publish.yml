@@ -18,11 +18,28 @@ jobs:
       packages: write
       pull-requests: write
     steps:
+      # All three Homebrew/actions refs are pinned to a CalVer release tag,
+      # matching tests.yml. `@master` is dead: homebrew/actions has no `master`
+      # branch any more, so every pr-pull run died before its first step with
+      #   Unable to resolve action `homebrew/actions@master`, unable to find
+      #   version `master`
+      # which meant no labelled PR could ever be bottled or merged.
+      #
+      # Tags point straight at commits on `main` and are never moved (see the
+      # Releases section of homebrew/actions/README.md), so this does not float.
+      # `@main` would resolve, but this job runs on pull_request_target with
+      # contents/packages write — the last place that wants a moving ref.
+      # 2026.09.28.1 = e99025eb970cfa124b8284a35463d87426917478. Bump both this
+      # file and tests.yml together.
+      #
+      # NOTE: `pull_request_target` reads this file from the BASE branch, so a
+      # change here only takes effect once it is on main. Land it first, then
+      # (re)add the `pr-pull` label to the release PR.
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@2026.09.28.1
 
       - name: Set up git
-        uses: Homebrew/actions/git-user-config@master
+        uses: Homebrew/actions/git-user-config@2026.09.28.1
 
       - name: Pull bottles
         env:
@@ -33,7 +50,7 @@ jobs:
         run: brew pr-pull --debug --tap="$GITHUB_REPOSITORY" "$PULL_REQUEST"
 
       - name: Push commits
-        uses: Homebrew/actions/git-try-push@master
+        uses: Homebrew/actions/git-try-push@2026.09.28.1
         with:
           token: ${{ github.token }}
           branch: main

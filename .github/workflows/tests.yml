@@ -31,11 +31,14 @@ jobs:
     steps:
       - name: Set up Homebrew
         id: set-up-homebrew
-        # Pinned, not @master: Homebrew deprecated the floating ref, the `master`
-        # branch sync stops, and it becomes a hard error at Homebrew 5.2.0. The
-        # SHA below is release 2026.07.10.1 — bump it when Homebrew's deprecation
-        # notice names a newer one.
-        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
+        # Pinned to a CalVer release tag, not a floating ref: Homebrew deprecated
+        # `@master`/`@main`, the `master` branch sync has stopped, and it becomes a
+        # hard error at Homebrew 5.2.0. Tags point at commits on `main` and are
+        # never moved. 2026.09.28.1 = e99025eb970cfa124b8284a35463d87426917478: it
+        # drops the `setup-sandbox` input this step never passed, adds a `tap-name`
+        # output, and still exports the gems-path/gems-hash outputs used below.
+        # Keep publish.yml pinned to the same tag.
+        uses: Homebrew/actions/setup-homebrew@2026.09.28.1
 
       - name: Cache Homebrew Bundler RubyGems
         id: cache
