@@ -24,8 +24,10 @@ jobs:
         # do get poured that bottle at install time.
         # Kept deliberately for now. To actually bottle Intel macOS we would need
         # an Intel *Sonoma* runner (macos-14-large), which is a billed larger
-        # runner. Note this leg returns before install/test, so it contributes no
-        # test coverage while it cannot bottle.
+        # runner. The leg still returns before the spike's install/test, so its
+        # coverage comes from the contensis-cli step at the bottom: installing the
+        # x86_64 macOS release asset is the one check only this leg can make, and
+        # Intel Mac users install that formula.
         os: [ubuntu-24.04, ubuntu-24.04-arm, macos-15, macos-15-intel]
     runs-on: ${{ matrix.os }}
     steps:
@@ -59,10 +61,15 @@ jobs:
 
       # GitHub's Intel macOS image ships with `aws/tap` already tapped, which makes
       # every subsequent brew command warn "Skipping aws/tap because it is not
-      # trusted". Untap rather than `brew trust` it — we do not use it, so there is
-      # no reason to mark a third-party tap trusted. No-op (hence `|| true`) on the
-      # runners that do not have it.
-      - run: brew untap aws/tap || true
+      # trusted". Untap rather than trust it: we do not use it, so there is no
+      # reason to mark a third-party tap trusted, and HOMEBREW_NO_REQUIRE_TAP_TRUST
+      # is deprecated upstream and would switch the check off for the whole job —
+      # including for our own tap. Scoped to the leg that has the problem, so it
+      # cannot silently start masking one elsewhere; `|| true` covers an image that
+      # stops shipping the tap.
+      - name: Untap aws/tap (pre-tapped on the Intel macOS image)
+        if: matrix.os == 'macos-15-intel'
+        run: brew untap aws/tap || true
 
       - run: brew test-bot --only-cleanup-before
 
