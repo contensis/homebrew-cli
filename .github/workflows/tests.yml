@@ -91,7 +91,16 @@ jobs:
         if: github.event_name == 'pull_request'
 
       - name: Upload bottles as artifact
-        if: always() && github.event_name == 'pull_request'
+        # macos-15-intel cannot bottle (see the matrix comment), so it is excluded
+        # rather than tolerated: with `if-no-files-found: ignore` on every leg, a
+        # bottling leg that produced nothing still went green. test-bot does that
+        # on purpose — `ignore_failures = ... && !bottled_on_current_version` in
+        # test_bot/formulae.rb means the first PR for a new version has no bottle
+        # to compare against, so a failed install is downgraded to
+        # "Warning: 1 failed step ignored!" and the step exits 0. This is the
+        # outside check that catches it: no bottle file on a leg that must bottle
+        # is now a hard failure.
+        if: always() && github.event_name == 'pull_request' && matrix.os != 'macos-15-intel'
         # Pinned to a release major rather than @main: `main` is an unpinned
         # development branch, not a supported ref. v7 targets node24.
         uses: actions/upload-artifact@v7
@@ -101,6 +110,4 @@ jobs:
           # from the run, so the suffix doesn't affect publishing.
           name: bottles_${{ matrix.os }}
           path: '*.bottle.*'
-          # macos-15-intel produces no bottle (see the matrix comment above), so the
-          # default `warn` behaviour reports a missing-files warning on every run.
-          if-no-files-found: ignore
+          if-no-files-found: error
