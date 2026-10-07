@@ -140,20 +140,30 @@ jobs:
       # `brew trust "$HOMEBREW_TAP_NAME"`). HOMEBREW_NO_INSTALL_FROM_API makes
       # brew read the tap rather than the API, which is what test-bot does too.
       #
-      # HOMEBREW_NO_PATH_SHADOW_CHECK is not cosmetic. The bottle step above
-      # installs the spike to build it, and the spike provides the same two names,
-      # so the shadow check sees `/opt/homebrew/bin/contensis-cli ->
-      # Cellar/contensis-cli-spike/…` and fails the install outright — even though
-      # the formula itself poured fine. That is expected coexistence between these
-      # two formulae, not a broken install, and it only bites the legs that bottle:
-      # macos-15-intel skips the spike, so it never shadows and passed. The test
-      # block is unaffected either way — `bin` in a test is the formula's own
-      # Cellar bin, not the shadowed shim.
+      # The spike has to be unlinked first, and that is the real fix rather than a
+      # workaround. The bottle step installs `contensis-cli-spike` in order to build
+      # it, and the spike provides the same two executables, so it owns
+      # /opt/homebrew/bin/contensis{,-cli}. Left linked, the pour succeeds and the
+      # `brew link` that follows it fails the step anyway (run 37636233179):
+      #   🍺  /opt/homebrew/Cellar/contensis-cli/1.7.1: 5 files, 72.8MB
+      #   Could not symlink bin/contensis
+      #   Target /opt/homebrew/bin/contensis is a symlink belonging to contensis-cli-spike.
+      #   Error: Process completed with exit code 1.
+      # Only on the three legs that bottle: macos-15-intel skips the spike, so
+      # nothing conflicts there and it passed. Unlinking is exactly what a user
+      # moving between the two formulae is told to do, and it is why
+      # HOMEBREW_NO_PATH_SHADOW_CHECK is not set: silencing the check only moved the
+      # failure from the pre-install warning to the link step, and leaving the check
+      # on keeps it useful for a conflict we did not cause. `|| true` covers the leg
+      # where the spike was never installed (`Error: No such keg`).
+      #
+      # The test block is unaffected either way — `bin` in a test is the formula's
+      # own Cellar bin, not the symlink.
       - name: Install and test contensis-cli
         env:
           HOMEBREW_NO_INSTALL_FROM_API: 1
-          HOMEBREW_NO_PATH_SHADOW_CHECK: 1
         run: |
+          brew unlink contensis-cli-spike || true
           brew install --formula contensis-cli
           brew test contensis-cli
 
