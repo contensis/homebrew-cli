@@ -13,8 +13,8 @@ class ContensisCli < Formula
   # "redundant with version scanned from URL", and that is the exact command tap
   # CI runs (`brew audit --except=installed --tap=contensis/cli`). The two
   # `-arm64` branches below are the deliberate exception — see the note there.
-  url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.0/contensis-cli-mac"
-  sha256 "441f464f223140f5320798e7bc2059dd99171d8e6f571ffc238bd85a43b577a8"
+  url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.1/contensis-cli-mac"
+  sha256 "a16fe55e584af3c39c4a74a9c6997bfc1f601ddd219bfec4703de078f851bcb3"
   license "GPL-3.0"
 
   livecheck do
@@ -46,20 +46,20 @@ class ContensisCli < Formula
   # no change.
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.0/contensis-cli-mac-arm64"
-      version "1.7.0"
-      sha256 "be79afe8f9095f27fa412f168578720e12689258ace591499274a4fd07f3f618"
+      url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.1/contensis-cli-mac-arm64"
+      version "1.7.1"
+      sha256 "e21f2a4d07bacc2f4b30b8cb163f9a485ee8a55d5ec2c65c82a219de89e633cd"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.0/contensis-cli-linux-arm64"
-      version "1.7.0"
-      sha256 "b9d35da07890d86928955e01947dc3b721a46767d0ffefab6e3bfcdd17c2e8ff"
+      url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.1/contensis-cli-linux-arm64"
+      version "1.7.1"
+      sha256 "ac108b34a2d0234354d6bfbc3fc4a63d94b422d585398afa7c9cc8f56c19f139"
     else
-      url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.0/contensis-cli-linux"
-      sha256 "7b16f25902925e3aae710a9bbfd8ad8c5b75f8d8868d3f93faa4deb1c77cc34e"
+      url "https://github.com/contensis/cli/releases/download/contensis-cli-v1.7.1/contensis-cli-linux"
+      sha256 "bd77c6da6db06c32840e028fd7a6e6acd639cb86ae349ab3286e4c4fc9d91df3"
     end
   end
 
@@ -88,13 +88,13 @@ class ContensisCli < Formula
     assert_predicate bin/"contensis-cli", :executable?
     assert_predicate bin/"contensis", :symlink?
 
-    # Restored for 1.7.0: the exit-code fix (contensis/cli 5b13e2d) is in this
-    # release, and the pkg-built binaries bake the correct version string —
-    # verified against the contensis-cli-linux asset: `--version` prints 1.7.0 and
-    # both flags exit 0. This is *not* true of the npm tarball, which still ships a
-    # stale src/version.ts (LIB_VERSION = 1.6.1-beta.25) until contensis/cli
-    # 31398bf is released, so the equivalent assertion stays commented out in the
-    # npm formula.
+    # Restored in 1.7.0 (contensis/cli 5b13e2d fixed the exit code) and re-verified
+    # for 1.7.1 against the contensis-cli-linux asset: `--version` prints 1.7.1 and
+    # exits 0. The pkg-built binaries bake the version string correctly because the
+    # release workflow runs `npm run build`, whose prebuild regenerates
+    # src/version.ts. The npm tarball did not run that hook until contensis/cli
+    # 31398bf, which is why the npm formula carried a stale version string one
+    # release longer than this one did.
     #
     # Not exercised by tap CI — tests.yml bottles only the npm formula, so this
     # file gets `brew style`/`audit` only. Run `brew test contensis-cli` locally.
