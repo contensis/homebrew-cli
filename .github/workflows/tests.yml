@@ -24,8 +24,10 @@ jobs:
         # do get poured that bottle at install time.
         # Kept deliberately for now. To actually bottle Intel macOS we would need
         # an Intel *Sonoma* runner (macos-14-large), which is a billed larger
-        # runner. Note this leg returns before install/test, so it contributes no
-        # test coverage while it cannot bottle.
+        # runner. The leg still returns before the spike's install/test, so its
+        # coverage comes from the contensis-cli step at the bottom: installing the
+        # x86_64 macOS release asset is the one check only this leg can make, and
+        # Intel Mac users install that formula.
         os: [ubuntu-24.04, ubuntu-24.04-arm, macos-15, macos-15-intel]
     runs-on: ${{ matrix.os }}
     steps:
@@ -59,10 +61,15 @@ jobs:
 
       # GitHub's Intel macOS image ships with `aws/tap` already tapped, which makes
       # every subsequent brew command warn "Skipping aws/tap because it is not
-      # trusted". Untap rather than `brew trust` it — we do not use it, so there is
-      # no reason to mark a third-party tap trusted. No-op (hence `|| true`) on the
-      # runners that do not have it.
-      - run: brew untap aws/tap || true
+      # trusted". Untap rather than trust it: we do not use it, so there is no
+      # reason to mark a third-party tap trusted, and HOMEBREW_NO_REQUIRE_TAP_TRUST
+      # is deprecated upstream and would switch the check off for the whole job —
+      # including for our own tap. Scoped to the leg that has the problem, so it
+      # cannot silently start masking one elsewhere; `|| true` covers an image that
+      # stops shipping the tap.
+      - name: Untap aws/tap (pre-tapped on the Intel macOS image)
+        if: matrix.os == 'macos-15-intel'
+        run: brew untap aws/tap || true
 
       - run: brew test-bot --only-cleanup-before
 
@@ -87,11 +94,90 @@ jobs:
       # version-independent root_url and routes `brew pr-pull` through GitHub
       # Packages, which is what publish.yml is already configured for.
       # Shape is fixed by Homebrew: https://ghcr.io/v2/<owner>/<tap-without-homebrew->
-      - run: brew test-bot --only-formulae --testing-formulae contensis-cli-spike --root-url=https://ghcr.io/v2/contensis/cli
+      - name: Build bottles
         if: github.event_name == 'pull_request'
+        # pipefail is not optional here: GitHub's default `bash -e` has no
+        # pipefail, so `brew test-bot … | tee` would report tee's status and the
+        # step could never fail.
+        shell: bash
+        run: |
+          set -euo pipefail
+          brew test-bot --only-formulae --testing-formulae contensis-cli-spike \
+            --root-url=https://ghcr.io/v2/contensis/cli 2>&1 | tee test-bot.log
+
+      # test-bot exits 0 when it ignores a failed step, and on a version bump it
+      # always will: `ignore_failures = … && !bottled_on_current_version` in
+      # test_bot/formulae.rb, and the version being bumped has no bottle yet by
+      # definition. The PR #35 run for 1.7.1 printed
+      #   ==> Skipped or failed formulae: contensis-cli-spike
+      #   Warning: 1 failed step ignored!
+      # and went green. Match the warning rather than the exit code, so the
+      # annotation names the cause instead of just "no bottles uploaded".
+      - name: Fail on a test-bot failure it exited zero on
+        if: always() && github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          if [ -f test-bot.log ] && grep -q "failed step ignored" test-bot.log; then
+            echo "::error::brew test-bot exited 0 after ignoring a failed step"
+            exit 1
+          fi
+
+      # The formula users actually install, and the one nothing above touches:
+      # the gate bottles only the spike, so contensis-cli.rb otherwise gets
+      # style/audit alone. A plain `brew install` keeps it out of test-bot's
+      # bottle path on purpose — patchelf corrupts the pkg-built binary, which is
+      # why the spike-only gate exists.
+      #
+      # This is what catches a half-bump. The formula carries four url/sha256
+      # pairs and bump tooling only ever sees one of them, so a stale pair shows
+      # up here as a checksum mismatch or a failed `--version` assertion on the
+      # platform it affects, instead of on a user's machine weeks later. It is
+      # also the first CI exercise of the `on_macos { if Hardware::CPU.arm? }`
+      # branch: each leg resolves the asset for its own platform.
+      #
+      # No `brew tap`/`brew trust` needed — setup-homebrew checks this repository
+      # out as the tap and trusts it (setup-homebrew main.sh:
+      # `brew trust "$HOMEBREW_TAP_NAME"`). HOMEBREW_NO_INSTALL_FROM_API makes
+      # brew read the tap rather than the API, which is what test-bot does too.
+      #
+      # The spike has to be unlinked first, and that is the real fix rather than a
+      # workaround. The bottle step installs `contensis-cli-spike` in order to build
+      # it, and the spike provides the same two executables, so it owns
+      # /opt/homebrew/bin/contensis{,-cli}. Left linked, the pour succeeds and the
+      # `brew link` that follows it fails the step anyway (run 37636233179):
+      #   🍺  /opt/homebrew/Cellar/contensis-cli/1.7.1: 5 files, 72.8MB
+      #   Could not symlink bin/contensis
+      #   Target /opt/homebrew/bin/contensis is a symlink belonging to contensis-cli-spike.
+      #   Error: Process completed with exit code 1.
+      # Only on the three legs that bottle: macos-15-intel skips the spike, so
+      # nothing conflicts there and it passed. Unlinking is exactly what a user
+      # moving between the two formulae is told to do, and it is why
+      # HOMEBREW_NO_PATH_SHADOW_CHECK is not set: silencing the check only moved the
+      # failure from the pre-install warning to the link step, and leaving the check
+      # on keeps it useful for a conflict we did not cause. `|| true` covers the leg
+      # where the spike was never installed (`Error: No such keg`).
+      #
+      # The test block is unaffected either way — `bin` in a test is the formula's
+      # own Cellar bin, not the symlink.
+      - name: Install and test contensis-cli
+        env:
+          HOMEBREW_NO_INSTALL_FROM_API: 1
+        run: |
+          brew unlink contensis-cli-spike || true
+          brew install --formula contensis-cli
+          brew test contensis-cli
 
       - name: Upload bottles as artifact
-        if: always() && github.event_name == 'pull_request'
+        # macos-15-intel cannot bottle (see the matrix comment), so it is excluded
+        # rather than tolerated: with `if-no-files-found: ignore` on every leg, a
+        # bottling leg that produced nothing still went green. test-bot does that
+        # on purpose — `ignore_failures = ... && !bottled_on_current_version` in
+        # test_bot/formulae.rb means the first PR for a new version has no bottle
+        # to compare against, so a failed install is downgraded to
+        # "Warning: 1 failed step ignored!" and the step exits 0. This is the
+        # outside check that catches it: no bottle file on a leg that must bottle
+        # is now a hard failure.
+        if: always() && github.event_name == 'pull_request' && matrix.os != 'macos-15-intel'
         # Pinned to a release major rather than @main: `main` is an unpinned
         # development branch, not a supported ref. v7 targets node24.
         uses: actions/upload-artifact@v7
@@ -101,6 +187,4 @@ jobs:
           # from the run, so the suffix doesn't affect publishing.
           name: bottles_${{ matrix.os }}
           path: '*.bottle.*'
-          # macos-15-intel produces no bottle (see the matrix comment above), so the
-          # default `warn` behaviour reports a missing-files warning on every run.
-          if-no-files-found: ignore
+          if-no-files-found: error
