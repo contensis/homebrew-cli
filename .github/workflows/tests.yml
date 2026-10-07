@@ -90,6 +90,30 @@ jobs:
       - run: brew test-bot --only-formulae --testing-formulae contensis-cli-spike --root-url=https://ghcr.io/v2/contensis/cli
         if: github.event_name == 'pull_request'
 
+      # The formula users actually install, and the one nothing above touches:
+      # the gate bottles only the spike, so contensis-cli.rb otherwise gets
+      # style/audit alone. A plain `brew install` keeps it out of test-bot's
+      # bottle path on purpose — patchelf corrupts the pkg-built binary, which is
+      # why the spike-only gate exists.
+      #
+      # This is what catches a half-bump. The formula carries four url/sha256
+      # pairs and bump tooling only ever sees one of them, so a stale pair shows
+      # up here as a checksum mismatch or a failed `--version` assertion on the
+      # platform it affects, instead of on a user's machine weeks later. It is
+      # also the first CI exercise of the `on_macos { if Hardware::CPU.arm? }`
+      # branch: each leg resolves the asset for its own platform.
+      #
+      # No `brew tap`/`brew trust` needed — setup-homebrew checks this repository
+      # out as the tap and trusts it (setup-homebrew main.sh:
+      # `brew trust "$HOMEBREW_TAP_NAME"`). HOMEBREW_NO_INSTALL_FROM_API makes
+      # brew read the tap rather than the API, which is what test-bot does too.
+      - name: Install and test contensis-cli
+        env:
+          HOMEBREW_NO_INSTALL_FROM_API: 1
+        run: |
+          brew install --formula contensis-cli
+          brew test contensis-cli
+
       - name: Upload bottles as artifact
         # macos-15-intel cannot bottle (see the matrix comment), so it is excluded
         # rather than tolerated: with `if-no-files-found: ignore` on every leg, a
