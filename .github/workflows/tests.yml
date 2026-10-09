@@ -154,8 +154,11 @@ jobs:
       # moving between the two formulae is told to do, and it is why
       # HOMEBREW_NO_PATH_SHADOW_CHECK is not set: silencing the check only moved the
       # failure from the pre-install warning to the link step, and leaving the check
-      # on keeps it useful for a conflict we did not cause. `|| true` covers the leg
-      # where the spike was never installed (`Error: No such keg`).
+      # on keeps it useful for a conflict we did not cause. The spike is simply
+      # absent on the leg that skips it, hence `|| true` — and `2>/dev/null`,
+      # because brew's `Error: No such keg` there is expected, while GitHub
+      # promotes any line starting `Error:` to a red annotation even when the step
+      # exits 0 (run 37936437562, macos-15-intel).
       #
       # The test block is unaffected either way — `bin` in a test is the formula's
       # own Cellar bin, not the symlink.
@@ -163,7 +166,7 @@ jobs:
         env:
           HOMEBREW_NO_INSTALL_FROM_API: 1
         run: |
-          brew unlink contensis-cli-spike || true
+          brew unlink contensis-cli-spike 2>/dev/null || true
           brew install --formula contensis-cli
           brew test contensis-cli
 
