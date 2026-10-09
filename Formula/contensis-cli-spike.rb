@@ -2,11 +2,12 @@
 # Unique class name so it cannot conflict with the real `contensis-cli`
 # formula that lives alongside it in this tap.
 #
-# BOTTLE: this formula carries no `bottle do` block. The blobs published at ghcr
-# belong to the tarball the previous version pointed at, so a version bump has to
-# delete the block rather than edit it. Tap CI rebuilds it on the PR and
-# `pr-pull` commits the new shas — never hand-write one, and keep this note out of
-# the class body for the `brew bottle --merge` anchoring reason below.
+# BOTTLE: a version bump must DELETE the `bottle do` block rather than edit it.
+# The blobs published at ghcr were built from the tarball the previous `url`
+# pointed at, so the committed shas cannot satisfy a new one. Tap CI rebuilds the
+# block on the PR and `pr-pull` commits the new shas — never hand-write one. Keep
+# this note out of the class body for the `brew bottle --merge` anchoring reason
+# below.
 #
 # NOTE: keep comments OUTSIDE the `livecheck do` block below. Homebrew's
 # `brew bottle --merge` (FormulaAST#add_stanza) anchors the bottle insertion on
