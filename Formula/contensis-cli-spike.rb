@@ -34,6 +34,13 @@ class ContensisCliSpike < Formula
     regex(/["']version["']:\s*["'](\d+(?:\.\d+)+)["']/i)
   end
 
+  bottle do
+    root_url "https://ghcr.io/v2/contensis/cli"
+    sha256 cellar: :any_skip_relocation, arm64_sequoia: "99dc90faeeb735464848575d42e1d00588de8d24c09e3d19dcd0c6b21437eb72"
+    sha256 cellar: :any,                 arm64_linux:   "ef3cd14f27e0b78afa872fdea6878916379aa23d13cb3c81e57eec40f76b3ec7"
+    sha256 cellar: :any,                 x86_64_linux:  "64d513608c964db241177b3e886b9b8510c54c42eab1e4e75d7393c428904746"
+  end
+
   depends_on "node"
 
   on_linux do
